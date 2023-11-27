@@ -5,6 +5,7 @@ import urllib.request
 import shutil
 import logging
 import re
+from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog
 from st_pages import add_page_title
@@ -84,25 +85,29 @@ def get_csv_image_dir(pathname):
     return pathname
 
 
-def download_csv_file_images(folder_path, df, column_name,log):
+def download_csv_file_images(folder_path, df, storename,log):
     dest_dir = get_csv_image_dir(folder_path)
     for index, row in df.iterrows():
         image_url = row.get("Image")
+        currentDateAndTime = datetime.now()
+        currentTime = currentDateAndTime.strftime("%Y.%m.%d")
         if pd.notnull(image_url):
-            image_filename = row.get(column_name)
+            image_filename = storename+'-'+str(row.get("Name"))+'-'+str(row.get("Index"))+'-'+str(currentTime)
             if pd.isnull(image_filename):
                 image_filename = row.get("Index")
 
             download_image(image_url, dest_dir, str(image_filename),index,log)
             
 
-def download_csv_file_images_progressbar(folder_path, df, column_name,log):
+def download_csv_file_images_progressbar(folder_path, df, storename,log):
     dest_dir = get_csv_image_dir(folder_path)
     total_images =len(df)
     for index, row in df.iterrows():
         image_url = row.get("Image")
+        currentDateAndTime = datetime.now()
+        currentTime = currentDateAndTime.strftime("%Y.%m.%d")
         if pd.notnull(image_url):
-            image_filename = row.get(column_name)
+            image_filename = storename+'-'+str(row.get("Name"))+'-'+str(row.get("Index"))+'-'+str(currentTime)
             if pd.isnull(image_filename):
                 image_filename = row.get("Index")
 
@@ -197,7 +202,7 @@ if st.session_state['path_state'] is not None:
             folder_path=st.session_state['savpath']+ '/'+storename+'/'
             st.session_state['logs'] = 1
             with st.spinner("Downloading images in %s" % storename):
-                download_csv_file_images(folder_path, df, column_name,st.session_state['logs'])
+                download_csv_file_images(folder_path, df, storename,st.session_state['logs'])
             st.success("Images in %s downloaded successfully!:sparkler:" % storename)
     if st.button("Start Scraping with progress bar:hourglass_flowing_sand:", type="primary"):
         for i in range(len(st.session_state.tables)):
@@ -215,5 +220,5 @@ if st.session_state['path_state'] is not None:
             with st.spinner("Downloading images in %s" % storename):
                 st.session_state['progress'] = 0
                 progress_bar = st.progress(st.session_state['progress'])
-                download_csv_file_images_progressbar(folder_path, df, column_name,st.session_state['logs'])
+                download_csv_file_images_progressbar(folder_path, df, storename,st.session_state['logs'])
             st.success("Images in %s downloaded successfully!:sparkler:" % storename)
