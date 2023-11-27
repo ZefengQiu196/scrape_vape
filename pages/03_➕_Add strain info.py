@@ -83,7 +83,8 @@ def get_strain_name(chrome_path,output_path):
                     soup = BeautifulSoup(driver.page_source, "html.parser")
                     result=soup.find("div",{"class":"flex flex-row items-center justify-between my-sm"}).find("div",{"class":"text-xs"})
                 try:
-                    pages=soup.find("div",{"class":"flex gap-2"}).find_all("button",{"class":"rounded-sm h-full underline text-green"})
+                    # pages=soup.find("div",{"class":"flex gap-2"}).find_all("button",{"class":"rounded-sm h-full underline text-green"})
+                    pages=soup.find("div",{"class":"flex gap-2"}).find_all("a",{"class":"rounded-sm h-10 flex items-center justify-center underline text-green"})
                     page=pages[-1].text
                 except:
                     page='1'

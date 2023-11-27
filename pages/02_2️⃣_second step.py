@@ -23,7 +23,7 @@ from st_pages import add_page_title
 add_page_title()
 
 
-def leafly(Dispensary,output_path):    
+def leafly(Dispensary,output_path,dispensary_name):    
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
     baseurl ='https://www.leafly.com'
     start = time.time()
@@ -32,20 +32,36 @@ def leafly(Dispensary,output_path):
     try:
         main = requests.get(Dispensary,headers=headers).text
         soup=BeautifulSoup(main,'html.parser')
-        try:
-            Store=soup.find("h1",{"class":"heading--s font-bold pr-xxl pb-xs"}).text
-        except:
-            Store=soup.find("h1",{"class":"heading--m font-extrabold pr-xxl pb-xs pt-xs"}).text
+        Store=dispensary_name
+        # try:
+        #     Store=soup.find("h1",{"class":"heading--s font-bold pr-xxl pb-xs"}).text
+        # except:
+        #     try:
+        #         Store=soup.find("h1",{"class":"heading--m font-extrabold pr-xxl pb-xs pt-xs"}).text
+        #     except:
+        #         try:
+        #             Store=soup.find("h1",{"class":"heading--m font-extrabold pr-xxl"}).text
+        #         except:
+        #             Store=dispensary_name
+        
         st.write('Begin scrapping:',Store)
     except:
         st.write('main page,wait...')
         time.sleep(60)
         main = requests.get(Dispensary,headers=headers).text
         soup=BeautifulSoup(main,'html.parser')
-        try:
-            Store=soup.find("h1",{"class":"heading--s font-bold pr-xxl pb-xs"}).text
-        except:
-            Store=soup.find("h1",{"class":"heading--m font-extrabold pr-xxl pb-xs pt-xs"}).text
+        Store=dispensary_name
+        # try:
+        #     Store=soup.find("h1",{"class":"heading--s font-bold pr-xxl pb-xs"}).text
+        # except:
+        #     try:
+        #         Store=soup.find("h1",{"class":"heading--m font-extrabold pr-xxl pb-xs pt-xs"}).text
+        #     except:
+        #         try:
+        #             Store=soup.find("h1",{"class":"heading--m font-extrabold pr-xxl"}).text
+        #         except:
+        #             Store=dispensary_name
+
         st.write('Begin scrapping:',Store)
     categorylist = soup.find_all("li",{"class":"mx-sm flex-shrink-0"})
 
@@ -336,7 +352,7 @@ def save_url_as_html(url, filename, max_retries=5, retry_delay=15):
             with open(filename, 'wb') as file:
                 file.write(response.content)
 
-            st.write(f"URL has been saved as an HTML file: {filename}")
+            # st.write(f"URL has been saved as an HTML file: {filename}")
             break  # Break out of the retry loop if successful
 
     except requests.RequestException as e:
@@ -362,6 +378,7 @@ if uploaded_file is not None:
             else:
                 Dispensary_list = df['Store link-href'].tolist()
             Name=df['Name'].tolist()
+            Status=df['Finish_scraping'].tolist()
         except:
             Dispensary_list='No Store link column in this file, please ensure you upload the correct file'
     elif uploaded_file.name.endswith("xlsx"):
@@ -373,9 +390,11 @@ if uploaded_file is not None:
             else:
                 Dispensary_list = df['Store link-href'].tolist()
             Name=df['Name'].tolist()
+            Status=df['Finish_scraping'].tolist()
         except:
             Dispensary_list='No Store link column in this file, please ensure you upload the correct file'
-        
+
+    
 st.divider()
 # Set up tkinter
 root = tk.Tk()
@@ -384,6 +403,18 @@ root.withdraw()
 
 # Make folder picker dialog appear on top of other windows
 root.wm_attributes('-topmost', 1)
+
+if uploaded_file is not None:
+    st.write('Select the folder that you save this table for updating scraping status:')
+    choose_table = st.button('Table folder')
+    if choose_table:  
+        select_tablepath=filedialog.askdirectory(master=root)
+        st.session_state['table_path'] = select_tablepath
+        st.session_state['table_fullpath']=st.session_state['table_path']+'/'+uploaded_file.name
+        st.write('Your local table path is:',st.session_state['table_fullpath'])
+    
+
+
 
 # Folder picker button
 st.header(':blue[Second step:] choose the output folder you want')
@@ -394,37 +425,43 @@ if clicked:
     dirname = st.text_input('Selected folder:', select_path, key="dirpath")    
     output_path=select_path+'/'
 
-    download_files = []
-    files=os.listdir(output_path)
-    for file in files:
-        download_files.append(file)
-    # st.write('These files exist under this folder:',download_files)    
-    download = [] 
-    for name in download_files:
-    # Extract the date from the name using regular expressions
-        date_match = re.search(r'\d{4}\.\d{2}\.\d{2}', name)
-        if date_match:
-            date = date_match.group()
-            # Split the name by the date
-            store_name = name.split(date)[0].strip('- ')
-            for char in store_name:
-                if char == "_":
-                    for special_char in r'[\\/:*?"<>|]':
-                        tempstore_name = store_name.replace(char, special_char)
-                        download.append(tempstore_name)
-            download.append(store_name)
+    download=[]
+    st.session_state['Status_yes']=0
+    for i in range(len(Dispensary_list)):
+        if Status[i]=='Y':
+            download.append(Name[i])
+            st.session_state['Status_yes']+=1
     downloaded = st.text_input('These stores have scraped:', download, key="downloaded") 
-    # st.write('Have downloaded:',download)        
-
+    
+   
+       
+    
 st.divider()
 st.header(':blue[Third step:] click the button')
 if st.button('Click me to begin'):
     output_path=st.session_state.dirpath+'/'
-    
+    st.session_state['progress'] = st.session_state['Status_yes']/len(Dispensary_list)
+    progress_text = str(st.session_state['Status_yes'])+' Dispensaries finished scraping'+':smile:'+'. There are total '+str(len(Dispensary_list))+' Dispensaries'
+    progress_bar = st.progress(st.session_state['progress'], text=progress_text)
     for i in range(len(Dispensary_list)):
         if Name[i] not in st.session_state.downloaded:
+            dispensary_name=Name[i]
             try:
-                leafly(Dispensary_list[i],output_path)
+                leafly(Dispensary_list[i],output_path,dispensary_name)
+
+
+                df.at[i, 'Finish_scraping'] = 'Y'
+                if uploaded_file is not None:
+                    if uploaded_file.name.endswith("csv"):
+                        df.to_csv(st.session_state['table_fullpath'],encoding='utf-8-sig') 
+                    elif uploaded_file.name.endswith("xlsx"):
+                        df.to_excel(st.session_state['table_fullpath'],encoding='utf-8-sig')
+                st.session_state['Status_yes']+=1        
+                st.session_state['progress'] = st.session_state['Status_yes']/len(Dispensary_list)
+                progress_text = str(st.session_state['Status_yes'])+' Dispensaries finished scraping'+':smile:'+'. There are total '+str(len(Dispensary_list))+' Dispensaries'
+                progress_bar.progress(st.session_state['progress'], text=progress_text)
+
+
             except AttributeError as e:
                 st.write('Something wrong,repeat step 2 and 3')
                 break

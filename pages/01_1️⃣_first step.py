@@ -32,12 +32,13 @@ def leafly_store(chrome_path,output_path):
     option.add_argument(r'--user-data-dir='+chrome_path)
     driver = webdriver.Chrome(service=s,options=option)
 
-    Name=[];Distance=[];Category=[];Rating=[];Reviewnum=[];Opentime=[];Pick_delivery=[];Link=[];Location=[];Has_deals=[];Total_product=[]
+    Name=[];Distance=[];Category=[];Rating=[];Reviewnum=[];Opentime=[];Pick_delivery=[];Link=[];Location=[];Has_deals=[];Total_product=[];Status=[]
     driver.get(baseurl)
     driver.implicitly_wait(900)
     time.sleep(3)
     soup = BeautifulSoup(driver.page_source, "html.parser")
-    pages=soup.find("div",{"class":"flex gap-2"}).find_all("button",{"class":"rounded-sm h-full underline text-green"})
+    pages=soup.find("div",{"class":"flex gap-2"}).find_all("a",{"class":"rounded-sm h-10 flex items-center justify-center underline text-green"})
+    # pages=soup.find("div",{"class":"flex gap-2"}).find_all("button",{"class":"rounded-sm h-full underline text-green"})
     page=pages[-1].text
     state=soup.find("div",{"class":"jsx-9336165732779550 font-bold lg:font-normal text-green lg:text-default underline lg:no-underline truncate"}).text
     # print('have:',page,'pages')
@@ -98,6 +99,8 @@ def leafly_store(chrome_path,output_path):
                 except:
                     link=''
                 Link.append(link)
+                status='N'
+                Status.append(status)
                 time.sleep(2)
 
     for j in range(len(Link)):
@@ -153,7 +156,7 @@ def leafly_store(chrome_path,output_path):
     driver.quit()   
 
     df = pd.DataFrame({
-        'Name':Name, 'Distance':Distance,'Category':Category,'Rating':Rating,'Reviewnum':Reviewnum, 'Open time':Opentime,'Pickup or delivery':Pick_delivery,'Link':Link,'Location':Location,'Has deals':Has_deals,'Total product':Total_product,})
+        'Name':Name, 'Distance':Distance,'Category':Category,'Rating':Rating,'Reviewnum':Reviewnum, 'Open time':Opentime,'Pickup or delivery':Pick_delivery,'Link':Link,'Location':Location,'Has deals':Has_deals,'Total product':Total_product,'Finish_scraping':Status})
     df.index.name = 'Index'
     df.to_csv(output_path+state+' '+currentTime+'.csv',encoding='utf-8-sig')
 
