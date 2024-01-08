@@ -42,7 +42,8 @@ def get_strain_name(chrome_path,output_path):
     driver.get(url)
     driver.implicitly_wait(900)
 
-    filter_icon = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.flex-row.text-xs")))
+    # filter_icon = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@id=listing-wrapper]/div[2]/div[3]/div/button")))
+    filter_icon = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.flex.flex-row.border.bg-white.roundedtext-xs.text-green.font-bold.px-sm.m-xs.button--small.px-md.py-xs.border-light-grey.items-center")))
     filter_icon.click()
     time.sleep(2)
     soup = BeautifulSoup(driver.page_source, "html.parser")
@@ -275,7 +276,7 @@ if st.session_state['strain_state'] is not None:
         has_strain_str = [', '.join(str(item) for item in strain_list) for strain_list in has_strain]
         df_origin=st.session_state['df_origin']
         df_origin['Has_Strain'] = has_strain_str
-        df_origin.index.name = 'Index'
+        # df_origin.index.name = 'Index'
         output_path = st.session_state['dirpath']+ '/'
         df_origin.to_csv(output_path+st.session_state['csv_name'][:-5]+'(With strain name).csv',encoding='utf-8-sig')
         st.success("Successfully add the strain column!:sparkler:")

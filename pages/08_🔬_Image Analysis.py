@@ -11,13 +11,17 @@ import numpy as np
 from sklearn.cluster import KMeans
 from collections import Counter
 from io import BytesIO
+from rembg import remove
 from st_pages import add_page_title
 
 add_page_title()
 # Function to feed image to ocr model
 def ocr_single_img(imgpath):
         # The ocr model dir must have model and params file
-        ocr = PaddleOCR(det_model_dir='{ch_PP-OCRv4_det_server_infer}',use_angle_cls=True)
+        #English and Chinese mixed mdoel
+        ocr = PaddleOCR(det_model_dir='{ch_PP-OCRv4_det_server_infer}',use_angle_cls=True) 
+        #English only mdoel
+        # ocr = PaddleOCR(use_angle_cls=True, lang="en") 
         img_path = imgpath
         result = ocr.ocr(img_path, cls=True)
 
@@ -240,8 +244,27 @@ if st.session_state['img_state'] is not None:
             st.write('OCR Result:')
             st.dataframe(st.session_state['ocr_df_result'])          
 
-            # 读取并转换图像
-            img = cv.imread(image_path, cv.IMREAD_UNCHANGED)
+            
+            if image_path.startswith(('http://', 'https://')):
+                response = requests.get(image_path)
+                response.raise_for_status()
+                image_np_array = np.array(bytearray(response.content), dtype=np.uint8)
+                img_ori = cv.imdecode(image_np_array, cv.IMREAD_UNCHANGED)
+                img_pil = Image.fromarray(cv.cvtColor(img_ori, cv.COLOR_BGR2RGB))
+                
+                output = remove(img_pil)
+                if output.mode=='PA':
+                    output = output.convert("RGBA")
+                img=np.array(output)
+                if img.shape[2] == 4:
+                    # 从 RGBA 转换为 BGRA
+                    img = cv.cvtColor(img, cv.COLOR_RGBA2BGRA)
+                else:
+                    # 从 RGB 转换为 BGR
+                    img = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+                
+            else:
+                img = cv.imread(image_path, cv.IMREAD_UNCHANGED)
             
             if img.shape[2] == 4:
                 # Separate BGR and alpha channels

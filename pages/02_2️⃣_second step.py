@@ -88,35 +88,54 @@ def leafly(Dispensary,output_path,dispensary_name):
             soup=BeautifulSoup(menu,'html.parser')
             category_product=soup.find("div",{"class":"flex-shrink-0 font-bold mr-xxl"}).text
         try:
-            totalpage=soup.find("div",{"class":"px-xxl py-lg"}).text
-            page=re.findall(r"\d+",totalpage)[-1]
+            totalpage=soup.find("div",{"class":"flex gap-2"}).find_all("a",{"class":"rounded-sm h-10 flex items-center justify-center underline text-green"})
+            page=totalpage[-1].text
         except:
             page='1'
         Category_page.append(page)  
         st.write(Store,' ,category:',Categories[i],'have total: ',category_product,' .It have ',page,' pages')
         time.sleep(random.uniform(1, 1.5))
-    st.write(Store,' :Finish count page')   
+    st.write(Store,'Finish count page')   
     for j in range(len(Categories)):
         for x in range(1,eval(Category_page[j])+1):
             add='&page={}'.format(x)
             menu_link=Category_link[j]+add
+            
             try:
-                menu_list=requests.get(menu_link,headers=headers)
+                option = webdriver.ChromeOptions()
+                option.add_argument('headless')
+                driver = webdriver.Chrome(options=option)
+                driver.implicitly_wait(120)
+                driver.get(menu_link)
             except:
                 st.write('Wait...')
                 time.sleep(120)
-                menu_list=requests.get(menu_link,headers=headers,verify=False)
-            soup=BeautifulSoup(menu_list.content,'html.parser')
+                option = webdriver.ChromeOptions()
+                option.add_argument('headless')
+                driver = webdriver.Chrome(options=option)
+                driver.implicitly_wait(90)
+                driver.get(menu_link)
+
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            
             cards=soup.find_all("div",{"class":"col-1/2 lg:col-1/3 mb-md"})
+            if len(cards)==0:
+                cards=soup.select('div.relative.h-full.bg-white.elevation-low.rounded.p-lg, div.relative.h-full.bg-white.elevation-low.rounded.p-lg.pt-xl')
+
+            st.write(Categories[j],'page:',x,'has cards:',len(cards))
             if len(cards)>0:
                 for card in cards:
                     Category.append(Categories[j])
                     try:
-                        link=card.find("a",{"class":"block h-full w-full"}).get('href')
-                        link=baseurl+link
+                        card_link=card.find("a",{"class":"block h-full w-full"}).get('href')
+                        link=baseurl+card_link
                     except:
-                        st.write('link error,the card is:',card)
-                        link=''
+                        try:
+                            card_link=card.find("a",{"data-testid":"menu-item-card-link"}).get('href')
+                            link=baseurl+card_link
+                        except:
+                            st.write('link error,the card is:',card)
+                            link=''
 
                     try:
                         name=card.find("h3",{"class":"font-bold text-sm break-words underline mt-xs"}).text
@@ -127,11 +146,17 @@ def leafly(Dispensary,output_path,dispensary_name):
                             try:
                                 name=card.find("h3",{"class":"font-bold text-sm break-words mt-xs min-h-[48px]"}).text
                             except:
-                                name=''
+                                try:
+                                    name=card.find("div",{"class":"font-bold text-sm break-words"}).text
+                                except:
+                                    name=''
                     try:
                         label=card.find("div",{"class":"text-secondary text-xs leading-none"}).text
                     except:
-                        label=''
+                        try:
+                            label=card.find("div",{"class":"text-secondary text-xs"}).text
+                        except:
+                            label=''
                     try:
                         unit=card.find("div",{"class":"font-bold text-xs"}).text
                     except:
@@ -155,19 +180,32 @@ def leafly(Dispensary,output_path,dispensary_name):
                         try:
                             orgprice=card.find("div",{"class":"flex items-center text-xs mt-xs min-h-[24px]"}).find('span').text
                         except:
-                            orgprice=''
+                            try:
+                                orgprice=card.find("div",{"class":"flex items-center text-xs gap-1"}).find('span').text
+                            except:
+                                orgprice=''
                     try:
                         discount=card.find("div",{"class":"flex items-center text-xs mt-xs"}).find("div",{"class":"bg-notification rounded text-white font-bold mr-sm"}).text
                     except:
                         try:
                             discount=card.find("div",{"class":"flex items-center text-xs mt-xs min-h-[24px]"}).find("div",{"class":"bg-notification rounded text-white font-bold mr-sm"}).text
                         except:
-                            discount=''
+                            try:
+                                discount=card.find("div",{"class":"flex items-center text-xs gap-1"}).find("div",{"class":"bg-notification rounded text-white font-bold mr-sm"}).text
+                            except:
+                                try:
+                                    discount=card.find("div",{"class":"flex items-center text-xs gap-1"}).find("div",{"class":"bg-notification rounded text-white font-bold"}).text
+                                except:
+                                    discount=''
                     try:
                         brand=card.find("h4",{"class":"font-normal text-xs"}).text.replace('by ',"")
                     except:
-                        brand=''
-                    Link.append(link);Name.append(name);Label.append(label);Unit.append(unit);Price.append(price);Brand.append(brand);
+                        try:
+                            brand=card.find("div",{"class":"font-normal text-xs"}).text.replace('by ',"")
+                        except:
+                            brand=''
+                    st.write(name,';',brand,';',orgprice,';',discount)
+                    Link.append(link);Name.append(name);Label.append(label);Unit.append(unit);Price.append(price);Brand.append(brand)
                     Orgprice.append(orgprice);Discount.append(discount)
                     try:
                         specific= requests.get(link,headers=headers).text
@@ -238,6 +276,7 @@ def leafly(Dispensary,output_path,dispensary_name):
                     driver.implicitly_wait(60)
                     try:
                         driver.get(link)
+                        time.sleep(1)
                         element = BeautifulSoup(driver.page_source, "html.parser")
                     except gaierror:
                         st.write('gaierror:',link)
@@ -279,13 +318,14 @@ def leafly(Dispensary,output_path,dispensary_name):
                         OtherAmount.append([])
 
                     try:
-                        strain=element.find("div",{"class":"expandable-container"}).text 
+                        strain=element.find("div",{"class":"flex flex-col gap-md flex-none"}).find("div",{"class":"flex flex-col gap-sm"}).find("a",{"class":"heading--l mb-xs"}).text
                     except:
                         try:
-                            strain=element.find("div",{"class":"flex flex-col gap-md flex-none"}).find("div",{"class":"flex flex-col gap-sm"}).find("a",{"class":"heading--l mb-xs"}).text
+                            strain=element.find("div",{"class":"expandable-container"}).text 
                         except:
                             strain=''
                     Strain.append(strain)
+                    
                     try:
                         similar = element.find_all("div",{"class":"jsx-d8321ff0acf99c10 underline overflow-hidden"})
                         if len(similar)==0:
@@ -325,6 +365,7 @@ def leafly(Dispensary,output_path,dispensary_name):
     for i in range(len(Link)):
         trans_Name=re.sub('\u200b', '', Name[i])
         trans_Name=re.sub('\t', '', trans_Name)
+        trans_Name=re.sub('\n', '', trans_Name)
         trans_Name=re.sub(r'[\\/:*?"<>|]', '_', trans_Name)
         output_filename=output_html+trans_Name+'.html'
         save_url_as_html(Link[i], output_filename)
