@@ -91,6 +91,8 @@ def leafly_store(chrome_path,output_path):
                 except:
                     distance=''
                 Distance.append(distance)
+
+                category_temp=[]
                 try:
                     category=item.find("div",{"class":"flex flex-col absolute top-0 right-0"}).find("div",{"class":"text-xs font-bold bg-white border border-light-grey rounded px-xs m-sm"}).text
                 except:
@@ -98,7 +100,9 @@ def leafly_store(chrome_path,output_path):
                         category=item.find("div",{"class":"flex flex-col absolute top-0 right-0"}).find("div",{"class":"text-xs font-bold bg-white border border-light-grey rounded px-xs"}).text
                     except:
                         category=''
-                Category.append(category)
+                category_temp.append(category)   
+                Category.append(category_temp)
+
                 try:
                     rating=item.find("div",{"class":"text-xs mt-xs"}).find("span",{"class":"pr-xs"}).text
                 except:
@@ -114,14 +118,18 @@ def leafly_store(chrome_path,output_path):
                 except:
                     optentime=''
                 Opentime.append(optentime)
+
+                pick_delivery=[]
                 try:
-                    pick_delivery=[]
-                    temp=item.find("div",{"class":"flex flex-wrap"}).find_all("span")
-                    for type in temp:
-                        pick_delivery.append(type.text)
+                    delivery_infos=item.find("div",{"class":"flex flex-wrap"}).find_all("span")
+                    for type in delivery_infos:
+                        if type.text!='Loading...':
+                            temp=type.text.replace('\xa0',' ')
+                            pick_delivery.append(temp)
                 except:
-                    pick_delivery=[]
-                
+                    delivery_infos=[]
+                Pick_delivery.append(pick_delivery)
+
                 try:
                     infolink=item.find("div",{"class":"w-full"}).find("a",{"class":""}).get('href')
                     link='https://www.leafly.com/'+infolink
@@ -151,14 +159,6 @@ def leafly_store(chrome_path,output_path):
         except:
             location=''
         Location.append(location)
-        try:
-            pickup=soup.find("div",{"data-testid":"dispensary-header-fulfillment"}).text
-        except:
-            pickup=''
-        pick_delivery.append(pickup)
-        pick_delivery=delList(pick_delivery)
-        
-        Pick_delivery.append(pick_delivery)
         
         time.sleep(1.5)
         try:
@@ -177,6 +177,28 @@ def leafly_store(chrome_path,output_path):
         except:
             total_product=''
         Total_product.append(total_product)
+
+        try:
+            pickup=soup.find("div",{"data-testid":"dispensary-header-fulfillment"}).text.replace('\xa0',' ')
+        except:
+            pickup=''
+        Pick_delivery[j].append(pickup)
+        Pick_delivery[j]=delList(Pick_delivery[j])
+        Pick_delivery[j] = [item for item in Pick_delivery[j] if item != '']
+       
+
+        try:
+            labels=soup.find_all("div",{"class":"uppercase text-xs font-bold border border-light-grey rounded px-sm"})
+            for label in labels:
+                label_info=label.text
+                Category[j].append(label_info)
+                
+        except:
+            label_info=''
+        
+        Category[j]=delList(Category[j])
+        Category[j] = [item for item in Category[j] if item != '']
+
 
         try:
             weed_deals=[]
