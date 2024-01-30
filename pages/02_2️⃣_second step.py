@@ -265,7 +265,7 @@ def leafly(Dispensary,output_path,dispensary_name):
                         except:
                             tmp=''
                     Alsolike.append(tmp);THC.append(thc);CBD.append(cbd)
-                    Image.append(image);Lineage.append(lineage);Description.append(description);Rating.append(rating);Reviewnum.append(reviewnum);
+                    Image.append(image);Lineage.append(lineage);Description.append(description);Rating.append(rating);Reviewnum.append(reviewnum)
 
                     option = webdriver.ChromeOptions()
                     option.add_argument('--headless=new')
@@ -484,7 +484,9 @@ if st.button('Click me to begin'):
     st.session_state['progress'] = st.session_state['Status_yes']/len(Dispensary_list)
     progress_text = str(st.session_state['Status_yes'])+' Dispensaries finished scraping'+':smile:'+'. There are total '+str(len(Dispensary_list))+' Dispensaries'
     progress_bar = st.progress(st.session_state['progress'], text=progress_text)
+    
     for i in range(len(Dispensary_list)):
+        
         if Name[i] not in st.session_state.downloaded:
             dispensary_name=Name[i]
             try:
@@ -494,9 +496,9 @@ if st.button('Click me to begin'):
                 df.at[i, 'Finish_scraping'] = 'Y'
                 if uploaded_file is not None:
                     if uploaded_file.name.endswith("csv"):
-                        df.to_csv(st.session_state['table_fullpath'],encoding='utf-8-sig') 
+                        df.to_csv(st.session_state['table_fullpath'],encoding='utf-8-sig', index=False) 
                     elif uploaded_file.name.endswith("xlsx"):
-                        df.to_excel(st.session_state['table_fullpath'],encoding='utf-8-sig')
+                        df.to_excel(st.session_state['table_fullpath'],encoding='utf-8-sig', index=False)
                 st.session_state['Status_yes']+=1        
                 st.session_state['progress'] = st.session_state['Status_yes']/len(Dispensary_list)
                 progress_text = str(st.session_state['Status_yes'])+' Dispensaries finished scraping'+':smile:'+'. There are total '+str(len(Dispensary_list))+' Dispensaries'

@@ -7,8 +7,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import re
-import random
-import csv
 import os
 from tqdm import tqdm
 from selenium import webdriver
@@ -16,12 +14,25 @@ from selenium.webdriver.chrome.service import Service
 from datetime import datetime
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
-from socket import gethostbyname, gaierror
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 from io import StringIO
 from st_pages import add_page_title
 
 add_page_title()
+
+def delList(L):
+    for i in L:
+        if L.count(i) != 1:
+            for x in range((L.count(i) - 1)):
+                L.remove(i)
+    for i in L:
+        if ',' in i:
+            L.remove(i)
+    return L
 
 def leafly_store(chrome_path,output_path):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
@@ -31,13 +42,16 @@ def leafly_store(chrome_path,output_path):
     # option.add_argument(r'--user-data-dir=C:\Users\40425\AppData\Local\Google\Chrome\User Data')
     option.add_argument(r'--user-data-dir='+chrome_path)
     driver = webdriver.Chrome(service=s,options=option)
+    driver.maximize_window()
 
     Name=[];Distance=[];Category=[];Rating=[];Reviewnum=[];Opentime=[];Pick_delivery=[];Link=[];Location=[];Has_deals=[];Total_product=[];Status=[]
     driver.get(baseurl)
     driver.implicitly_wait(900)
     time.sleep(3)
     soup = BeautifulSoup(driver.page_source, "html.parser")
+    
     pages=soup.find("div",{"class":"flex gap-2"}).find_all("a",{"class":"rounded-sm h-10 flex items-center justify-center underline text-green"})
+   
     # pages=soup.find("div",{"class":"flex gap-2"}).find_all("button",{"class":"rounded-sm h-full underline text-green"})
     page=pages[-1].text
     state=soup.find("div",{"class":"jsx-9336165732779550 font-bold lg:font-normal text-green lg:text-default underline lg:no-underline truncate"}).text
@@ -46,10 +60,25 @@ def leafly_store(chrome_path,output_path):
     for i in range(1,eval(page)+1):
             pageurl='https://www.leafly.com/dispensaries?page='+str(i)
             driver.get(pageurl)
-            driver.implicitly_wait(900)
+            driver.implicitly_wait(1200)
+            
             time.sleep(3)
-            soup = BeautifulSoup(driver.page_source, "html.parser")
+            
+            # action = ActionChains(driver)
+            # try:
+            #     scroll= WebDriverWait(driver, 10).until(
+            #         EC.presence_of_element_located((By.CSS_SELECTOR, "div.flex.flex-shrink-0.relative.mr-lg.header__menu"))
+            #     )
+            #     action.move_to_element_with_offset(scroll, -93, 234).click().move_by_offset(0, 500).click().perform()
+            #     for _ in range(20):
+            #         action.move_by_offset(0, 20).click().perform()
 
+            # except Exception as e:
+            #     st.write("Reached the end of the scrollable area or element is out of bounds.")
+                
+
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            
             cards=soup.find_all("div",{"flex flex-col items-start justify-between relative h-full w-full rounded overflow-hidden bg-white elevation-low p-lg border border-light-grey my-sm shadow-none"})
             for item in cards:
                 try:
@@ -92,7 +121,7 @@ def leafly_store(chrome_path,output_path):
                         pick_delivery.append(type.text)
                 except:
                     pick_delivery=[]
-                Pick_delivery.append(pick_delivery)
+                
                 try:
                     infolink=item.find("div",{"class":"w-full"}).find("a",{"class":""}).get('href')
                     link='https://www.leafly.com/'+infolink
@@ -103,15 +132,18 @@ def leafly_store(chrome_path,output_path):
                 Status.append(status)
                 time.sleep(2)
 
+    
     for j in range(len(Link)):
         menulink=Link[j]+'/menu'
         try:
             driver.get(Link[j])
+            time.sleep(1)
             driver.implicitly_wait(900)
             soup = BeautifulSoup(driver.page_source, "html.parser")
         except:
             time.sleep(300)
             driver.get(Link[j])
+            time.sleep(1)
             driver.implicitly_wait(900)
             soup = BeautifulSoup(driver.page_source, "html.parser")
         try:
@@ -120,8 +152,35 @@ def leafly_store(chrome_path,output_path):
             location=''
         Location.append(location)
         try:
+            pickup=soup.find("div",{"data-testid":"dispensary-header-fulfillment"}).text
+        except:
+            pickup=''
+        pick_delivery.append(pickup)
+        pick_delivery=delList(pick_delivery)
+        
+        Pick_delivery.append(pick_delivery)
+        
+        time.sleep(1.5)
+        try:
+            driver.get(menulink)
+            time.sleep(1.5)
+            driver.implicitly_wait(900)
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+        except:
+            time.sleep(300)
+            driver.get(menulink)
+            time.sleep(1.5)
+            driver.implicitly_wait(900)
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+        try:
+            total_product=soup.find("div",{"class":"flex-shrink-0 font-bold mr-xxl"}).text
+        except:
+            total_product=''
+        Total_product.append(total_product)
+
+        try:
             weed_deals=[]
-            deals=soup.find_all("div",{"class":"jsx-4e8d3358a540eece p-lg flex justify-between flex-col h-full"})
+            deals=soup.find_all("div",{"class":"jsx-4e8d3358a540eece p-lg flex justify-between flex-col h-full"})   
             for deal in deals:
                 temp1=deal.find("div",{"class":"jsx-4e8d3358a540eece bg-notification rounded text-xs text-white font-bold"}).text
                 temp2=deal.find("div",{"class":"jsx-4e8d3358a540eece font-bold mb-sm"}).text
@@ -131,24 +190,10 @@ def leafly_store(chrome_path,output_path):
                 
         except:
             weed_deals=''
+        
         Has_deals.append(weed_deals)
-
-        time.sleep(2)
-        try:
-            driver.get(menulink)
-            driver.implicitly_wait(900)
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-        except:
-            time.sleep(300)
-            driver.get(menulink)
-            driver.implicitly_wait(900)
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-        try:
-            total_product=soup.find("div",{"class":"flex-shrink-0 font-bold mr-xxl"}).text
-        except:
-            total_product=''
-        Total_product.append(total_product)
-        time.sleep(2)
+        
+        time.sleep(1)
 
     currentDateAndTime = datetime.now()
     currentTime = currentDateAndTime.strftime("%Y.%m.%d")
