@@ -48,7 +48,7 @@ def get_strain_name(chrome_path,output_path):
     time.sleep(2)
     soup = BeautifulSoup(driver.page_source, "html.parser")
     state=soup.find("div",{"class":"jsx-9336165732779550 font-bold lg:font-normal text-green lg:text-default underline lg:no-underline truncate"}).text
-    strains=soup.find("div",{"id":"accordionsection-strain-name"}).find_all('span')
+    strains=soup.find("div",{"id":"filter-strain-name"}).find("div",{"id":"accordionsection-strain-name"}).find_all('span')
     Strain=[]
     for strain in strains:
         if strain.text!='':
