@@ -160,7 +160,10 @@ def leafly(Dispensary,output_path,dispensary_name):
                     try:
                         unit=card.find("div",{"class":"font-bold text-xs"}).text
                     except:
-                        unit=''
+                        try:
+                            unit=card.find("div",{"class":"flex items-center justify-start"}).find("div",{"class":"font-bold text-xs pl-xs"}).text
+                        except:
+                            unit=''
                     try:
                         price=card.find("div",{"class":"font-bold text-lg"}).text
                     except:
@@ -173,7 +176,10 @@ def leafly(Dispensary,output_path,dispensary_name):
                                 try:
                                     price=card.find("div",{"class":"font-bold text-lg min-h-[24px] text-notification"}).text
                                 except:
-                                    price=''
+                                    try:
+                                        price=card.find("div",{"class":"flex items-center justify-start"}).find("div",{"data-testid":"menu-item-card__price"}).text
+                                    except:
+                                        price=''
                     try:
                         orgprice=card.find("div",{"class":"flex items-center text-xs mt-xs"}).find('span').text
                     except:
@@ -183,7 +189,10 @@ def leafly(Dispensary,output_path,dispensary_name):
                             try:
                                 orgprice=card.find("div",{"class":"flex items-center text-xs gap-1"}).find('span').text
                             except:
-                                orgprice=''
+                                try:
+                                    orgprice=card.find("div",{"data-testid":"discount-details"}).find('span').text
+                                except:
+                                    orgprice=''
                     try:
                         discount=card.find("div",{"class":"flex items-center text-xs mt-xs"}).find("div",{"class":"bg-notification rounded text-white font-bold mr-sm"}).text
                     except:
@@ -196,7 +205,10 @@ def leafly(Dispensary,output_path,dispensary_name):
                                 try:
                                     discount=card.find("div",{"class":"flex items-center text-xs gap-1"}).find("div",{"class":"bg-notification rounded text-white font-bold"}).text
                                 except:
-                                    discount=''
+                                    try:
+                                        discount=card.find("div",{"class":"flex items-center text-xs"}).find("div",{"class":"bg-notification rounded text-white font-bold px-sm"}).text
+                                    except:
+                                        discount=''
                     try:
                         brand=card.find("h4",{"class":"font-normal text-xs"}).text.replace('by ',"")
                     except:
@@ -204,7 +216,7 @@ def leafly(Dispensary,output_path,dispensary_name):
                             brand=card.find("div",{"class":"font-normal text-xs"}).text.replace('by ',"")
                         except:
                             brand=''
-                    st.write(name,';',brand,';',orgprice,';',discount)
+                    st.write(name,';',brand,';','Price:',price,'Reg price:',orgprice,'Discount:',discount)
                     Link.append(link);Name.append(name);Label.append(label);Unit.append(unit);Price.append(price);Brand.append(brand)
                     Orgprice.append(orgprice);Discount.append(discount)
                     try:
