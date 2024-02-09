@@ -275,7 +275,19 @@ def leafly(Dispensary,output_path,dispensary_name):
                                     alsolike=r.find("h3",{"class":"font-bold text-sm break-words mt-xs min-h-[48px]"}).text
                                 tmp.append(alsolike)
                         except:
-                            tmp=''
+                            try:
+                                Like=soups.find("ul",{"class":"jsx-3331326260 inline-flex lg:flex -mr-sm lg:mr-none transition-transform carousel-list"})
+                                relate=Like.find_all("li",{"class":"jsx-3331326260 flex-shrink-0 carousel__card mr-md snap-start"})
+                                tmp=[]
+                                for r in relate:
+                                    try:
+                                        alsolike=r.find("h3",{"class":"font-bold text-sm break-words mt-xs"}).text
+                                    except:
+                                        alsolike=r.find("h3",{"class":"font-bold text-sm break-words mt-xs min-h-[48px]"}).text
+                                    tmp.append(alsolike)
+                            except:
+                                tmp=''
+                    
                     Alsolike.append(tmp);THC.append(thc);CBD.append(cbd)
                     Image.append(image);Lineage.append(lineage);Description.append(description);Rating.append(rating);Reviewnum.append(reviewnum)
 
