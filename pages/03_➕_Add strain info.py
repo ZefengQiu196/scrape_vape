@@ -89,7 +89,7 @@ def get_strain_name(chrome_path,output_path):
                     page=pages[-1].text
                 except:
                     page='1'
-                cards=soup.find_all("div",{"flex w-full justify-between"})
+                cards=soup.find_all("div",{"flex flex-col items-start justify-between relative h-full w-full rounded overflow-hidden bg-white elevation-low p-lg border border-light-grey my-sm shadow-none"})
                 for item in cards:
                     try:
                         store=item.find("div",{"class":"font-bold truncate-lines truncate-2-lines w-60"}).text
@@ -104,7 +104,7 @@ def get_strain_name(chrome_path,output_path):
                         driver.implicitly_wait(900)
                         time.sleep(1)
                         soup = BeautifulSoup(driver.page_source, "html.parser")
-                        cards=soup.find_all("div",{"flex w-full justify-between"})
+                        cards=soup.find_all("div",{"flex flex-col items-start justify-between relative h-full w-full rounded overflow-hidden bg-white elevation-low p-lg border border-light-grey my-sm shadow-none"})
                         for item in cards:
                             try:
                                 store=item.find("div",{"class":"font-bold truncate-lines truncate-2-lines w-60"}).text
@@ -129,7 +129,7 @@ def get_strain_name(chrome_path,output_path):
             df.index.name = 'Index'
             df.to_csv(output_path2+file_name,encoding='utf-8-sig')
             st.session_state['dirpath2'] = output_path2
-            st.success("Finish scraping dispensaies in: %s :sparkler:" % Strain[i])
+            # st.success("Finish scraping dispensaies in: %s :sparkler:" % Strain[i])
             time.sleep(1)
 
     driver.close()
