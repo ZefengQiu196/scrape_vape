@@ -61,6 +61,7 @@ def palette_perc_lab(k_cluster, cluster_labels, width=300):
     Color_hex1=[]
     Color_name2=[]
     Color_hex2=[]
+    RGB=[]
     # Initialize the palette as a black image
     palette = np.zeros((50, width, 3), np.uint8)
 
@@ -69,20 +70,21 @@ def palette_perc_lab(k_cluster, cluster_labels, width=300):
     counter = Counter(cluster_labels)
     perc = {i: np.round(counter[i] / n_pixels, 2) for i in counter}
     perc = dict(sorted(perc.items()))
-
     # Draw the palette
     step = 0
     for idx, center in enumerate(k_cluster.cluster_centers_):
         lab_color = np.uint8([[center]])
         bgr_color = cv.cvtColor(lab_color, cv.COLOR_LAB2BGR).flatten()
-        rgb_color = bgr_color[::-1]
+        rgb_color = bgr_color[::-1] 
+        RGB.append(list(rgb_color))
         end = step + int(perc[idx] * width)
         palette[:, step:end, :] = rgb_color
         step = end
-
+    
     palette_image = Image.fromarray(palette)
 
-    lab_center_lists = [list(row) for row in k_cluster.cluster_centers_]      
+    lab_center_lists = [list(row) for row in k_cluster.cluster_centers_]    
+     
     for lab_center in lab_center_lists:
         
         closest_color_name, closest_hex= find_closest_color(lab_center, color_df)
@@ -289,7 +291,13 @@ if st.session_state['img_state'] is not None:
                 # Perform K-Means clustering on the LAB pixels
                 clt_lab = KMeans(n_clusters=5)
                 clt_lab.fit(lab_pixels)
-
+                counter = Counter(clt_lab.labels_)
+                
+                if len(counter)<5:
+                    clt_lab = KMeans(n_clusters=len(counter))
+                    clt_lab.fit(lab_pixels)
+                    counter = Counter(clt_lab.labels_)
+                    
                 palette_img, perc, palette_centers,df_main_color = palette_perc_lab(clt_lab, clt_lab.labels_)
                 st.session_state['palette_img_result'] = palette_img
                 st.session_state['palette_perc_result'] = perc

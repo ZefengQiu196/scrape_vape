@@ -391,6 +391,8 @@ def leafly(Dispensary,output_path,dispensary_name):
         trans_Name=re.sub('\t', '', trans_Name)
         trans_Name=re.sub('\n', '', trans_Name)
         trans_Name=re.sub(r'[\\/:*?"<>|]', '_', trans_Name)
+        if len(trans_Name)>150:
+            trans_Name=trans_Name[:150]
         output_filename=output_html+trans_Name+'.html'
         save_url_as_html(Link[i], output_filename)
     st.write('Finish scrapping:',storename)
@@ -511,7 +513,7 @@ if st.button('Click me to begin'):
     
     for i in range(len(Dispensary_list)):
         
-        if Name[i] not in st.session_state.downloaded:
+        if (Status[i]=='N')or(Name[i] not in st.session_state.downloaded):
             dispensary_name=Name[i]
             try:
                 leafly(Dispensary_list[i],output_path,dispensary_name)
